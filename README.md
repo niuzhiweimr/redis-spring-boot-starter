@@ -13,7 +13,7 @@
               3.哨兵：@EnableRedis(value = RedisModeConstants.REDIS_SENTINEL)
         
         提示: 请修改启动类@SpringBootApplication为如下代码:
-            @SpringBootApplication(scanBasePackages = {"com.awservice.*"})
+            @SpringBootApplication(scanBasePackages = {"com.easy.*"})
     
  
 2：关于redis的配置参数 详见类 { RedisProperties }
