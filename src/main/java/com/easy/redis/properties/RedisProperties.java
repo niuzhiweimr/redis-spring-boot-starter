@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 @Setter
 @ToString
 @Component
-@ConfigurationProperties(prefix = "redis")
+@ConfigurationProperties(prefix = "easy.redis")
 public class RedisProperties {
 
     @Describe(value = "redis 单点地址")
