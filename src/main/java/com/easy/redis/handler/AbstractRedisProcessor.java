@@ -41,7 +41,7 @@ public abstract class AbstractRedisProcessor {
             oos.writeObject(object);
             return baos.toByteArray();
         } catch (Exception e) {
-            log.error("redisException 存储对象序列化失败...");
+            log.error("redisException serialize fail ", e);
         }
         return null;
     }
@@ -61,7 +61,7 @@ public abstract class AbstractRedisProcessor {
             ois = new ObjectInputStream(bais);
             return ois.readObject();
         } catch (Exception e) {
-            log.debug("redisException 获取对象反序列化失败...");
+            log.error("redisException unSerialize fail ", e);
         }
         return null;
     }
