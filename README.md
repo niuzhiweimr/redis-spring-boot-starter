@@ -21,7 +21,7 @@
 3：maven导入坐标
  
         <dependency>
-           <groupId>com.springframework.redis</groupId>
+           <groupId>com.easy.redis</groupId>
             <artifactId>redis-spring-boot-starter</artifactId>
            <version>1.0</version>
         </dependency>
