@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import redis.clients.jedis.Jedis;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -700,6 +701,46 @@ public class RedisSingleProcessor extends AbstractRedisProcessor {
         }
     }
 
+    /**
+     * redis 分布式锁-锁定
+     *
+     * @param key    分布式锁Key
+     * @param value  分布式锁value
+     * @param expire 分布式锁过期时间
+     * @return true-获取锁成功/false-获取锁失败
+     */
+    public boolean tryLock(String key, String value, long expire) {
+        Jedis jedis;
+        try {
+            jedis = getJedisSingle();
+            String result = jedis.set(key, value, "NX", "PX", expire);
+            return "OK".equals(result);
+        } catch (Exception e) {
+            log.error("redis 分布式锁-锁定异常，异常信息：", e);
+        }
+        return false;
+    }
+
+    /**
+     * redis 分布式锁-解锁
+     *
+     * @param key   分布式锁Key
+     * @param value 分布式锁value
+     * @return true-解除锁成功/false-解除锁失败
+     */
+    public boolean unLock(String key, String value) {
+        String luaScript =
+                "if redis.call(\"get\",KEYS[1]) == ARGV[1] then return redis.call(\"del\",KEYS[1]) else  return 0 end";
+        Jedis jedis;
+        try {
+            jedis = getJedisSingle();
+            Object result = jedis.eval(luaScript, Collections.singletonList(key), Collections.singletonList(value));
+            return Long.parseLong(String.valueOf(result)) == 1L;
+        } catch (Exception e) {
+            log.error("redis 分布式锁-解锁异常，异常信息：", e);
+        }
+        return false;
+    }
 
     @Override
     public JedisConnectionFactory getConnectionFactory() {
