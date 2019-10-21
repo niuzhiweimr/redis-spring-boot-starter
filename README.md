@@ -18,12 +18,12 @@
  
 2：关于redis的配置参数 详见类 { RedisProperties }
   
-3：maven导入坐标
+3：maven导入坐标 ${version}根据自己编译的版本选择导入
  
         <dependency>
            <groupId>com.easy.redis</groupId>
             <artifactId>redis-spring-boot-starter</artifactId>
-           <version>1.0</version>
+            <version>${version}</version>
         </dependency>
  
  # redis使用说明
