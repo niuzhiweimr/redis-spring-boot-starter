@@ -36,11 +36,7 @@ public class RedisInitialization {
     @ConditionalOnMissingBean(JedisConnectionFactory.class)
     public JedisConnectionFactory jedisConnectionFactory() {
 
-        if (RedisConnectionFactoryUtil.isInit) {
-            return RedisConnectionFactoryUtil.init(redisProperties);
-        } else {
-            return new JedisConnectionFactory();
-        }
+        return RedisConnectionFactoryUtil.init(redisProperties);
     }
 
 

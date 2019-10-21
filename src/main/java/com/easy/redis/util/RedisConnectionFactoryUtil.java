@@ -1,7 +1,9 @@
 package com.easy.redis.util;
 
-import com.easy.redis.cache.RedisAdapterAndProcessorCache;
+import com.easy.redis.adapter.RedisAdapter;
 import com.easy.redis.constants.RedisModeConstants;
+import com.easy.redis.core.RedisApplicationContext;
+import com.easy.redis.core.RedisEnvironment;
 import com.easy.redis.properties.RedisProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.BeanInitializationException;
@@ -23,8 +25,15 @@ import java.util.List;
 @Slf4j
 public class RedisConnectionFactoryUtil {
 
-    /*是否初始化连接工厂*/
-    public static boolean isInit = false;
+    /**
+     * 本地host
+     */
+    private static final String LOCAL_HOST = "localhost";
+
+    /**
+     * 本地ip
+     */
+    private static final String LOCAL_IP = "127.0.0.1";
 
     /**
      * 初始化redis连接工厂
@@ -34,8 +43,20 @@ public class RedisConnectionFactoryUtil {
      */
     public static JedisConnectionFactory init(RedisProperties redisProperties) {
 
-        String redisMode = RedisAdapterAndProcessorCache.RedisAdapterMap
-                .get(RedisAdapterAndProcessorCache.ADAPTER_KEY).getRedisMode();
+        RedisEnvironment environment = RedisApplicationContext
+                .builder()
+                .build()
+                .getEnv();
+
+        if (!environment.getRedisConnectionFactoryIsInit()) {
+            return new JedisConnectionFactory();
+        }
+
+        String redisMode = RedisApplicationContext
+                .builder()
+                .build()
+                .getBean(RedisAdapter.class)
+                .getRedisMode();
 
         JedisPoolConfig poolConfig = new JedisPoolConfig();
         poolConfig.setMaxTotal(redisProperties.getMaxActive());
@@ -94,7 +115,7 @@ public class RedisConnectionFactoryUtil {
      */
     private static RedisStandaloneConfiguration getRedisSingleConfiguration(RedisProperties redisProperties) {
 
-        if ("localhost".equals(redisProperties.getHost()) || "127.0.0.1".equals(redisProperties.getHost())) {
+        if (LOCAL_HOST.equals(redisProperties.getHost()) || LOCAL_IP.equals(redisProperties.getHost())) {
             log.warn("Note that redis connection address is localhost. Change address if production environment");
         }
 
@@ -126,10 +147,7 @@ public class RedisConnectionFactoryUtil {
         //获取节点
         String[] cNodes = redisProperties.getCluster().split(",");
         //分割出集群节点
-        for (String node : cNodes) {
-            String[] hp = node.split(":");
-            nodeList.add(new RedisNode(hp[0], Integer.parseInt(hp[1])));
-        }
+        splitNode(nodeList, cNodes);
         redisConfig.setClusterNodes(nodeList);
         if (!StringUtils.isEmpty(redisProperties.getPassword())) {
             redisConfig.setPassword(RedisPassword.of(redisProperties.getPassword()));
@@ -157,14 +175,26 @@ public class RedisConnectionFactoryUtil {
         //获取节点
         String[] cNodes = redisProperties.getNodes().split(",");
         //分割出集群节点
-        for (String node : cNodes) {
-            String[] hp = node.split(":");
-            nodeList.add(new RedisNode(hp[0], Integer.parseInt(hp[1])));
-        }
+        splitNode(nodeList, cNodes);
         redisConfig.setSentinels(nodeList);
         if (!StringUtils.isEmpty(redisProperties.getPassword())) {
             redisConfig.setPassword(RedisPassword.of(redisProperties.getPassword()));
         }
         return redisConfig;
+    }
+
+
+    /**
+     * 切割集群节点
+     *
+     * @param nodeList 节点列表
+     * @param cNodes   节点
+     */
+    private static void splitNode(List<RedisNode> nodeList, String[] cNodes) {
+
+        for (String node : cNodes) {
+            String[] hp = node.split(":");
+            nodeList.add(new RedisNode(hp[0], Integer.parseInt(hp[1])));
+        }
     }
 }
