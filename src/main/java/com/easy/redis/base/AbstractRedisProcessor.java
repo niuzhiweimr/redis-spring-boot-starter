@@ -9,7 +9,6 @@ import java.io.*;
  * redis抽象处理类各处类必须继承此类
  *
  * @author niuzhiwei (niuzhiwei@sinoiov.com)
- * @author zhangjiangchuang
  */
 @Slf4j
 public abstract class AbstractRedisProcessor implements RedisCommands {

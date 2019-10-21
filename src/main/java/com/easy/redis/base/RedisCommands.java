@@ -8,7 +8,6 @@ import java.util.Map;
 /**
  * redis 操作函数顶级接口
  *
- * @author zhangjiangchuang
  * @author niuzhiwei
  */
 public interface RedisCommands {
