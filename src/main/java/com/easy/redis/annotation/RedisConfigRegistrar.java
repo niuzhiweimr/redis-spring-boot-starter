@@ -1,11 +1,11 @@
 package com.easy.redis.annotation;
 
 import com.easy.redis.adapter.RedisAdapter;
-import com.easy.redis.cache.RedisAdapterAndProcessorCache;
+import com.easy.redis.core.RedisApplicationContext;
+import com.easy.redis.core.RedisEnvironment;
 import com.easy.redis.handler.RedisClusterProcessor;
 import com.easy.redis.handler.RedisSentinelProcessor;
 import com.easy.redis.handler.RedisSingleProcessor;
-import com.easy.redis.util.RedisConnectionFactoryUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
@@ -20,6 +20,7 @@ import org.springframework.core.type.AnnotationMetadata;
 @Slf4j
 public class RedisConfigRegistrar implements ImportBeanDefinitionRegistrar {
 
+
     @Override
     public void registerBeanDefinitions(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
 
@@ -30,20 +31,20 @@ public class RedisConfigRegistrar implements ImportBeanDefinitionRegistrar {
 
         RedisAdapter redisAdapter = new RedisAdapter();
         redisAdapter.setRedisMode(redisMode);
-        RedisAdapterAndProcessorCache.RedisAdapterMap.put(
-                RedisAdapterAndProcessorCache.ADAPTER_KEY, redisAdapter);
-
-        RedisConnectionFactoryUtil.isInit = true;
-
         RedisSingleProcessor redisSingleProcessor = new RedisSingleProcessor();
         RedisClusterProcessor redisClusterProcessor = new RedisClusterProcessor();
         RedisSentinelProcessor redisSentinelProcessor = new RedisSentinelProcessor();
-        RedisAdapterAndProcessorCache.RedisProcessorMap.put(
-                RedisAdapterAndProcessorCache.PROCESSOR_SINGLE_KEY, redisSingleProcessor);
-        RedisAdapterAndProcessorCache.RedisProcessorMap.put(
-                RedisAdapterAndProcessorCache.PROCESSOR_CLUSTER_KEY, redisClusterProcessor);
-        RedisAdapterAndProcessorCache.RedisProcessorMap.put(
-                RedisAdapterAndProcessorCache.PROCESSOR_SENTINEL_KEY, redisSentinelProcessor);
+
+        RedisEnvironment redisEnvironment = new RedisEnvironment();
+        redisEnvironment.setRedisConnectionFactoryIsInit(Boolean.TRUE);
+
+        RedisApplicationContext
+                .builder()
+                .build().setBean(redisEnvironment.getClass().getName(), redisEnvironment)
+                .setBean(redisAdapter.getClass().getName(), redisAdapter)
+                .setBean(redisSingleProcessor.getClass().getName(), redisSingleProcessor)
+                .setBean(redisClusterProcessor.getClass().getName(), redisClusterProcessor)
+                .setBean(redisSentinelProcessor.getClass().getName(), redisSentinelProcessor);
 
     }
 
