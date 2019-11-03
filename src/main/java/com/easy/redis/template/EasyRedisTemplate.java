@@ -187,6 +187,22 @@ public class EasyRedisTemplate {
     public boolean unLock(String key, String value) {
         return getRedisAdapter().getRedisProcessor().unLock(key, value);
     }
+    
+    @Describe("分布式等待锁-锁定，返回值:true-获取锁成功/false-获取锁失败"
+    		+ "expireSecond:持有锁超时毫秒数，waitSecond:等待锁超时秒数,flag:线程标识调用getThreadFlag()获取")
+    public boolean tryLockWait(String key, long expireSecond, int waitSecond, String flag) {
+        return getRedisAdapter().getRedisProcessor().tryLockWait(key, expireSecond, waitSecond, flag);
+    }
+
+    @Describe("分布式等待锁-解锁，返回值:true-获取锁成功/false-获取锁失败-flag:线程标识调用getThreadFlag()获取")
+    public boolean unlockWait(String key, String flag) {
+        return getRedisAdapter().getRedisProcessor().unlockWait(key, flag);
+    }
+
+    @Describe("获取线程标识")
+    public String getThreadFlag() {
+        return getRedisAdapter().getRedisProcessor().getThreadFlag();
+    }
 
     private RedisAdapter getRedisAdapter() {
 

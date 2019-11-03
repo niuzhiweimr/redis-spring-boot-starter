@@ -298,6 +298,32 @@ public interface RedisCommands {
      * @return true-解除锁成功/false-解除锁失败
      */
     boolean unLock(String key, String value);
+    
+    /**
+     * redis 分布式锁-锁定
+     *
+     * @param key          分布式等待锁Key
+     * @param expireSecond 持有锁超时毫秒数
+     * @param waitSecond   等待锁超时秒数
+     * @param flag         线程标识
+     * @return true-获取锁成功/false-获取锁失败
+     */
+    boolean tryLockWait(String key, long expireSecond, int waitSecond, String flag);
 
+    /**
+     * redis 分布式锁-解锁
+     *
+     * @param key  分布式等待锁Key
+     * @param flag 线程标识
+     * @return true-解除锁成功/false-解除锁失败
+     */
+    boolean unlockWait(String key, String flag);
+
+    /**
+     * 获取线程标识
+     *
+     * @return
+     */
+    String getThreadFlag();
 
 }

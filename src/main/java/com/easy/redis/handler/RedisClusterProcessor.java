@@ -570,6 +570,81 @@ public class RedisClusterProcessor extends AbstractRedisProcessor {
         }
         return false;
     }
+    
+    @Override
+    public boolean tryLockWait(String key, long expireSecond, int waitSecond, String flag) {
+        JedisCluster jedis;
+        try {
+            jedis = getCluster();
+            // 尝试获得锁 如果自身持有锁则可以再次获得
+            String result = jedis.set(key, flag, "NX", "PX", expireSecond);
+            if ("OK".equals(result)) {
+                log.info("easyRedis Cluster 获取等待锁成功 key：{}  线程标识：{}", key, flag);
+                return true;
+            }
+            //阻塞等待释放锁通知
+            String waitKey = key + flag;
+            List<String> lp = jedis.blpop(waitSecond, waitKey);
+            if (lp == null || lp.size() < 1) {
+                log.info("easyRedis Cluster 获取等待锁失败 key：{}  线程标识：{}", key, flag);
+                return false;
+            }
+            return tryLockWait(key, expireSecond, waitSecond, flag);
+        } catch (Exception e) {
+            log.error("redis 分布式等待锁-解锁异常，异常信息：", e);
+            return false;
+        }
+    }
+
+
+    @Override
+    public boolean unlockWait(String key, String flag) {
+        JedisCluster jedis;
+        try {
+            jedis = getCluster();
+            //删除锁定的key
+            String luaScript =
+                    "if redis.call(\"get\",KEYS[1]) == ARGV[1] then return redis.call(\"del\",KEYS[1]) else  return 0 end";
+            Object result = jedis.eval(luaScript, Collections.singletonList(key), Collections.singletonList(flag));
+            long unlock = Long.parseLong(String.valueOf(result));
+            if (unlock == 1L) {
+                log.info("easyRedis Cluster 解锁等待锁成功 key：{} 线程标识：{}", key, flag);
+                return false;
+            }
+            // 因为是可重入锁 所以释放成功不一定会释放锁
+            if (unlock == 2L) {
+                return true;
+            }
+            //如果锁释放消息队列里没有值 则释放一个信号
+            if (jedis.llen(key).intValue() == 0) {
+                //通知等待的线程可以继续获得锁
+                String waitKey = key + flag;
+                jedis.rpush(waitKey, "ok");
+            }
+            return true;
+        } catch (Exception e) {
+            log.error("redis 分布式锁-解锁异常，异常信息：", e);
+            return false;
+        }
+    }
+
+    @Override
+    public String getThreadFlag() {
+        String flag = threadFlag.get();
+        if (flag != null && flag.length() > 0) {
+            return flag;
+        }
+        long num = 0;
+        JedisCluster jedis = getCluster();
+        try {
+            num = jedis.incr(THREAD_FLAG_NUM);
+        } catch (Exception e) {
+            log.error("easyRedis Cluster error: ", e);
+        }
+        flag = "" + num;
+        threadFlag.set(flag);
+        return flag;
+    }
 
     @Override
     public JedisConnectionFactory getConnectionFactory() {

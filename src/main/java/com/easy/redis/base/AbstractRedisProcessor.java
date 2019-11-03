@@ -13,6 +13,16 @@ import java.io.*;
 @Slf4j
 public abstract class AbstractRedisProcessor implements RedisCommands {
 
+	/**
+     * 默认的线程标识
+     */
+    protected static ThreadLocal<String> threadFlag = new ThreadLocal<>();
+
+    /**
+     * 线程标识
+     */
+    protected static String THREAD_FLAG_NUM = "thread:flag:num";
+    
     /**
      * 获取连接工厂
      *
@@ -24,7 +34,6 @@ public abstract class AbstractRedisProcessor implements RedisCommands {
      * 关闭连接
      */
     public abstract void close();
-
 
     /**
      * 序列化
@@ -53,7 +62,6 @@ public abstract class AbstractRedisProcessor implements RedisCommands {
         }
         return null;
     }
-
 
     /**
      * 反序列化

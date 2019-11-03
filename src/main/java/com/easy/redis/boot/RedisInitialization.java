@@ -3,7 +3,6 @@ package com.easy.redis.boot;
 import com.easy.redis.properties.RedisProperties;
 import com.easy.redis.template.EasyRedisTemplate;
 import com.easy.redis.util.RedisConnectionFactoryUtil;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -17,7 +16,6 @@ import javax.annotation.Resource;
  *
  * @author niuzhiwei
  */
-@Slf4j
 @Configuration
 @EnableConfigurationProperties(RedisProperties.class)
 public class RedisInitialization {
