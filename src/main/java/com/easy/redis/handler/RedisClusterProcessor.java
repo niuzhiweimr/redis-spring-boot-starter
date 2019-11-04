@@ -583,7 +583,7 @@ public class RedisClusterProcessor extends AbstractRedisProcessor {
                 return true;
             }
             //阻塞等待释放锁通知
-            String waitKey = key + flag;
+            String waitKey = BLOCKING_KEY_PREFIX + key;
             List<String> lp = jedis.blpop(waitSecond, waitKey);
             if (lp == null || lp.size() < 1) {
                 log.info("easyRedis Cluster 获取等待锁失败 key：{}  线程标识：{}", key, flag);
@@ -611,14 +611,10 @@ public class RedisClusterProcessor extends AbstractRedisProcessor {
                 log.info("easyRedis Cluster 解锁等待锁成功 key：{} 线程标识：{}", key, flag);
                 return false;
             }
-            // 因为是可重入锁 所以释放成功不一定会释放锁
-            if (unlock == 2L) {
-                return true;
-            }
             //如果锁释放消息队列里没有值 则释放一个信号
             if (jedis.llen(key).intValue() == 0) {
                 //通知等待的线程可以继续获得锁
-                String waitKey = key + flag;
+            	 	String waitKey = BLOCKING_KEY_PREFIX + key;
                 jedis.rpush(waitKey, "ok");
             }
             return true;

@@ -24,6 +24,11 @@ public abstract class AbstractRedisProcessor implements RedisCommands {
     protected static String THREAD_FLAG_NUM = "thread:flag:num";
     
     /**
+     * 阻塞队列key前缀
+     */
+    protected static String BLOCKING_KEY_PREFIX = "blocking:";
+    
+    /**
      * 获取连接工厂
      *
      * @return
