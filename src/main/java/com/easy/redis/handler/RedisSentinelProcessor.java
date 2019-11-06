@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * redis 哨兵处理类
@@ -34,39 +35,51 @@ public class RedisSentinelProcessor extends AbstractRedisProcessor {
         JedisClientConfiguration jedisClientConfiguration = jedisConnectionFactory.getClientConfiguration();
         int connectTimeout = Math.toIntExact(jedisClientConfiguration.getConnectTimeout().toMillis());
         int readTimeout = Math.toIntExact(jedisClientConfiguration.getReadTimeout().toMillis());
-        String masterName = redisSentinelConfiguration.getMaster().getName();
+        assert redisSentinelConfiguration != null;
+        String masterName = Objects.requireNonNull(redisSentinelConfiguration.getMaster()).getName();
         String host;
         int port;
         for (RedisNode node : redisSentinelConfiguration.getSentinels()) {
-            Jedis sentinelJedis = new Jedis(node.getHost(), node.getPort(), connectTimeout, readTimeout);
-            if ("pong".equalsIgnoreCase(sentinelJedis.ping()) && !isRead) {
-                List<String> master = sentinelJedis.sentinelGetMasterAddrByName(masterName);
-                jedisClientConfiguration.getClientName().ifPresent(sentinelJedis::clientSetname);
-                host = master.get(0);
-                port = Integer.parseInt(master.get(1));
-                jedis = new Jedis(host, port, connectTimeout, readTimeout);
-                jedis.connect();
-                return jedis;
-            } else if ("pong".equalsIgnoreCase(sentinelJedis.ping()) && isRead) {
-                List<Map<String, String>> slaves = sentinelJedis.sentinelSlaves(masterName);
-                List<String> sentinelsTag = new ArrayList<>();
-                redisSentinelConfiguration.getSentinels().forEach(each -> {
-                    sentinelsTag.add(each.getHost() + each.getPort());
-                });
-                do {
-                    int index = (int) (Math.random() * (slaves.size() - 1));
-                    Map<String, String> slave = slaves.get(index);
-                    host = slave.get("ip");
-                    port = Integer.parseInt(slave.get("port"));
-                } while (sentinelsTag.contains(host + port));
+            Jedis sentinelJedis = null;
+            try {
+                int nodePort = node.getPort() == null ? 3306 : node.getPort();
+                sentinelJedis = new Jedis(node.getHost(), nodePort, connectTimeout, readTimeout);
+                if ("pong".equalsIgnoreCase(sentinelJedis.ping()) && !isRead) {
+                    List<String> master = sentinelJedis.sentinelGetMasterAddrByName(masterName);
+                    jedisClientConfiguration.getClientName().ifPresent(sentinelJedis::clientSetname);
+                    host = master.get(0);
+                    port = Integer.parseInt(master.get(1));
+                    jedis = new Jedis(host, port, connectTimeout, readTimeout);
+                    jedis.connect();
+                    return jedis;
+                } else if ("pong".equalsIgnoreCase(sentinelJedis.ping()) && isRead) {
+                    List<Map<String, String>> slaves = sentinelJedis.sentinelSlaves(masterName);
+                    List<String> sentinelsTag = new ArrayList<>();
+                    redisSentinelConfiguration.getSentinels().forEach(each -> {
+                        sentinelsTag.add(each.getHost() + each.getPort());
+                    });
+                    do {
+                        int index = (int) (Math.random() * (slaves.size() - 1));
+                        Map<String, String> slave = slaves.get(index);
+                        host = slave.get("ip");
+                        port = Integer.parseInt(slave.get("port"));
+                    } while (sentinelsTag.contains(host + port));
 
-                jedis = new Jedis(host, port, connectTimeout, readTimeout);
-                jedis.connect();
-                return jedis;
+                    jedis = new Jedis(host, port, connectTimeout, readTimeout);
+                    jedis.connect();
+                    return jedis;
+                }
+            } catch (NumberFormatException e) {
+            		log.error("Get redis sentinel connection Exception ", e);
+                throw new RuntimeException("Get redis sentinel connection Exception", e);
+            } finally {
+                if (null != sentinelJedis) {
+                    sentinelJedis.close();
+                }
             }
         }
 
-        throw new RuntimeException("easyRedis Get redis sentinel connection no connection available");
+        throw new RuntimeException("Get redis sentinel connection no connection available");
     }
 
     @Override
