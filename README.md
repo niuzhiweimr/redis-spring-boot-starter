@@ -11,10 +11,6 @@
               1.单点：@EnableRedis(value = RedisModeConstants.REDIS_SINGLE)
               2.集群：@EnableRedis(value = RedisModeConstants.REDIS_CLUSTER)
               3.哨兵：@EnableRedis(value = RedisModeConstants.REDIS_SENTINEL)
-        
-        提示: 请修改启动类@SpringBootApplication为如下代码:
-            @SpringBootApplication(scanBasePackages = {"com.easy.*"})
-    
  
 2：关于redis的配置参数 详见类 { RedisProperties }
   
