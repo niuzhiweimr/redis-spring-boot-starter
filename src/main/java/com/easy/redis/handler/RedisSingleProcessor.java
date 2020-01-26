@@ -22,7 +22,7 @@ import java.util.Map;
 @Slf4j
 public class RedisSingleProcessor extends AbstractRedisProcessor {
 
-    private static Jedis jedis;
+    private Jedis jedis;
 
     private Jedis getSingle() {
         if (jedis == null) {

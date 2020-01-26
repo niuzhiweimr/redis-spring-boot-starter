@@ -22,7 +22,7 @@ import java.util.StringJoiner;
 @Slf4j
 public class RedisClusterProcessor extends AbstractRedisProcessor {
 
-    private static JedisCluster jedisCluster;
+    private JedisCluster jedisCluster;
 
     private JedisCluster getCluster() {
         if (jedisCluster == null) {

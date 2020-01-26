@@ -26,7 +26,7 @@ import java.util.Objects;
 @Slf4j
 public class RedisSentinelProcessor extends AbstractRedisProcessor {
 
-    private static Jedis jedis;
+    private Jedis jedis;
 
     @SuppressWarnings("resource")
 	private Jedis getSentinel(boolean isRead) {
