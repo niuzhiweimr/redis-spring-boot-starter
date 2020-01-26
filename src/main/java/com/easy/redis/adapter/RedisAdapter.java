@@ -1,8 +1,8 @@
 package com.easy.redis.adapter;
 
 import com.easy.redis.base.AbstractRedisProcessor;
+import com.easy.redis.boot.RedisBeanContext;
 import com.easy.redis.constants.RedisModeConstants;
-import com.easy.redis.core.RedisApplicationContext;
 import com.easy.redis.handler.RedisClusterProcessor;
 import com.easy.redis.handler.RedisSentinelProcessor;
 import com.easy.redis.handler.RedisSingleProcessor;
@@ -39,20 +39,11 @@ public class RedisAdapter {
 
 		switch (redisMode) {
 			case RedisModeConstants.REDIS_SINGLE:
-				return RedisApplicationContext
-						.builder()
-						.build()
-						.getBean(RedisSingleProcessor.class);
+				return RedisBeanContext.getBean(RedisSingleProcessor.class);
 			case RedisModeConstants.REDIS_CLUSTER:
-				return RedisApplicationContext
-						.builder()
-						.build()
-						.getBean(RedisClusterProcessor.class);
+				return RedisBeanContext.getBean(RedisClusterProcessor.class);
 			case RedisModeConstants.REDIS_SENTINEL:
-				return RedisApplicationContext
-						.builder()
-						.build()
-						.getBean(RedisSentinelProcessor.class);
+				return RedisBeanContext.getBean(RedisSentinelProcessor.class);
 			default:
 				log.error("Failed to obtain redis schema instance params {}", redisMode);
 				throw new RuntimeException("Failed to obtain redis schema instance");

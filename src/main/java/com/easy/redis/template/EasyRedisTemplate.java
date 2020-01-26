@@ -2,7 +2,7 @@ package com.easy.redis.template;
 
 import com.easy.redis.adapter.RedisAdapter;
 import com.easy.redis.annotation.Describe;
-import com.easy.redis.core.RedisApplicationContext;
+import com.easy.redis.boot.RedisBeanContext;
 import com.easy.redis.core.RedisEnvironment;
 import lombok.extern.slf4j.Slf4j;
 import redis.clients.jedis.ScanResult;
@@ -28,9 +28,14 @@ public class EasyRedisTemplate {
         return getRedisAdapter().getRedisProcessor().length(key);
     }
 
-    @Describe(value = "新增 value为Object类型")
-    public void set(String key, Object obj) {
-        getRedisAdapter().getRedisProcessor().set(key, obj);
+    @Describe(value = "新增对象类型")
+    public void setObj(String key, Object obj) {
+        getRedisAdapter().getRedisProcessor().setObj(key, obj);
+    }
+
+    @Describe(value = "新增对象类型 seconds 有效期（单位：s）--正数 ")
+    public void setObj(String key, Object obj, int seconds) {
+        getRedisAdapter().getRedisProcessor().setexObj(key, obj, seconds);
     }
 
     @Describe(value = "新增 value为String类型")
@@ -43,18 +48,13 @@ public class EasyRedisTemplate {
         getRedisAdapter().getRedisProcessor().setex(key, value, seconds);
     }
 
-    @Describe(value = "新增 value为Object类型 seconds 有效期（单位：s）--正数 ")
-    public void set(String key, Object obj, int seconds) {
-        getRedisAdapter().getRedisProcessor().setex(key, obj, seconds);
-    }
-
     @Describe(value = "获取key的值 ")
     public String get(String key) {
         return getRedisAdapter().getRedisProcessor().get(key);
     }
 
     @Describe(value = "获取多个key值")
-    public List<String> get(String... keys) {
+    public List<String> getKeys(String... keys) {
         return getRedisAdapter().getRedisProcessor().get(keys);
     }
 
@@ -68,9 +68,9 @@ public class EasyRedisTemplate {
         return getRedisAdapter().getRedisProcessor().scan(regx);
     }
 
-    @Describe(value = "获取key的值 class为需要转换为的对象 ")
-    public <T> T get(String key, Class<T> clazz) {
-        return getRedisAdapter().getRedisProcessor().get(key, clazz);
+    @Describe(value = "获取对象类型 ")
+    public <T> T getObj(String key, Class<T> clazz) {
+        return getRedisAdapter().getRedisProcessor().getObj(key, clazz);
     }
 
     @Describe(value = "获取key的有效期")
@@ -173,6 +173,11 @@ public class EasyRedisTemplate {
         return getRedisAdapter().getRedisProcessor().rpop(key);
     }
 
+    @Describe(value = "redis阻塞队列 seconds:秒")
+    public List<String> blpop(String key, int seconds) {
+        return getRedisAdapter().getRedisProcessor().blpop(key, seconds);
+    }
+
     @Describe(value = "设置key的过期时间")
     public void expire(String key, int seconds) {
         getRedisAdapter().getRedisProcessor().setTimeOut(key, seconds);
@@ -206,10 +211,7 @@ public class EasyRedisTemplate {
 
     private RedisAdapter getRedisAdapter() {
 
-        RedisEnvironment environment = RedisApplicationContext
-                .builder()
-                .build()
-                .getEnv();
+        RedisEnvironment environment = RedisBeanContext.getBean(RedisEnvironment.class);
 
         if (!environment.getRedisConnectionFactoryIsInit()) {
             log.error("Please open the redis integration annotation" +
@@ -218,7 +220,7 @@ public class EasyRedisTemplate {
                     " @enableEtcRedis and select redis mode {single, cluster, sentinel}");
         }
 
-        return RedisApplicationContext.builder().build().getBean(RedisAdapter.class);
+        return RedisBeanContext.getBean(RedisAdapter.class);
     }
 
 }

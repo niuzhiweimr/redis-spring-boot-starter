@@ -111,7 +111,7 @@ public class RedisSentinelProcessor extends AbstractRedisProcessor {
     }
 
     @Override
-    public void set(String key, Object obj) {
+    public void setObj(String key, Object obj) {
         Jedis jedis;
         try {
             if (key != null && obj != null) {
@@ -162,7 +162,7 @@ public class RedisSentinelProcessor extends AbstractRedisProcessor {
     }
 
     @Override
-    public void setex(String key, Object obj, int seconds) {
+    public void setexObj(String key, Object obj, int seconds) {
         Jedis jedis;
         try {
             if (key != null && obj != null && seconds > 0) {
@@ -256,7 +256,7 @@ public class RedisSentinelProcessor extends AbstractRedisProcessor {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> T get(String key, Class<T> clazz) {
+    public <T> T getObj(String key, Class<T> clazz) {
         Jedis jedis;
         try {
             if (key != null) {
@@ -569,6 +569,25 @@ public class RedisSentinelProcessor extends AbstractRedisProcessor {
         try {
             jedis = getSentinel(false);
             return key == null ? null : jedis.rpop(key);
+        } catch (Exception e) {
+            log.error("easyRedis Sentinel error: ", e);
+        } finally {
+            close();
+        }
+        return null;
+    }
+
+    @Override
+    public List<String> blpop(String key, int seconds) {
+        Jedis jedis;
+        try {
+            if (key != null && seconds > 0) {
+                jedis = getSentinel(false);
+                return jedis.blpop(seconds, key);
+            } else {
+                log.error("easyRedis Sentinel params error,method:BLPOP key:{} seconds:{}  ", key, seconds);
+            }
+
         } catch (Exception e) {
             log.error("easyRedis Sentinel error: ", e);
         } finally {

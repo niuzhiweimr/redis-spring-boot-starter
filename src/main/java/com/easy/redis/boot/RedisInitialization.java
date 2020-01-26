@@ -7,6 +7,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 
 import javax.annotation.Resource;
@@ -22,6 +24,12 @@ public class RedisInitialization {
 
     @Resource
     private RedisProperties redisProperties;
+
+    @Bean
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    public RedisBeanContext redisBeanContext() {
+        return new RedisBeanContext();
+    }
 
     @Bean
     @ConditionalOnMissingBean(EasyRedisTemplate.class)

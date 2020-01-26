@@ -1,12 +1,16 @@
 package com.easy.redis.annotation;
 
 import com.easy.redis.adapter.RedisAdapter;
-import com.easy.redis.core.RedisApplicationContext;
 import com.easy.redis.core.RedisEnvironment;
 import com.easy.redis.handler.RedisClusterProcessor;
 import com.easy.redis.handler.RedisSentinelProcessor;
 import com.easy.redis.handler.RedisSingleProcessor;
+import com.easy.redis.util.BeanRegisterUtil;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.AnnotationMetadata;
@@ -16,7 +20,7 @@ import org.springframework.core.type.AnnotationMetadata;
  *
  * @author niuzhiwei
  */
-public class RedisConfigRegistrar implements ImportBeanDefinitionRegistrar {
+public class RedisConfigRegistrar implements ImportBeanDefinitionRegistrar, BeanFactoryAware {
 
 
     @Override
@@ -27,24 +31,35 @@ public class RedisConfigRegistrar implements ImportBeanDefinitionRegistrar {
 
         String redisMode = attributes.getString("value");
 
-        RedisAdapter redisAdapter = new RedisAdapter();
-        redisAdapter.setRedisMode(redisMode);
-        RedisSingleProcessor redisSingleProcessor = new RedisSingleProcessor();
-        RedisClusterProcessor redisClusterProcessor = new RedisClusterProcessor();
-        RedisSentinelProcessor redisSentinelProcessor = new RedisSentinelProcessor();
+        DefaultListableBeanFactory defaultListableBeanFactory = BeanRegisterUtil.getDefaultListableBeanFactory();
+        BeanRegisterUtil.register(defaultListableBeanFactory, RedisEnvironment.class);
+        BeanRegisterUtil.register(defaultListableBeanFactory, RedisAdapter.class);
+        BeanRegisterUtil.register(defaultListableBeanFactory, RedisSingleProcessor.class);
+        BeanRegisterUtil.register(defaultListableBeanFactory, RedisClusterProcessor.class);
+        BeanRegisterUtil.register(defaultListableBeanFactory, RedisSentinelProcessor.class);
+        BeanRegisterUtil.register(defaultListableBeanFactory, RedisEnvironment.class);
 
-        RedisEnvironment redisEnvironment = new RedisEnvironment();
-        redisEnvironment.setRedisConnectionFactoryIsInit(Boolean.TRUE);
-
-        RedisApplicationContext
-                .builder()
-                .build().setBean(redisEnvironment.getClass().getName(), redisEnvironment)
-                .setBean(redisAdapter.getClass().getName(), redisAdapter)
-                .setBean(redisSingleProcessor.getClass().getName(), redisSingleProcessor)
-                .setBean(redisClusterProcessor.getClass().getName(), redisClusterProcessor)
-                .setBean(redisSentinelProcessor.getClass().getName(), redisSentinelProcessor);
-
+        after(redisMode);
     }
 
+    /**
+     * 后置操作 添加redis模式和修改redis连接工厂是否初始化
+     *
+     * @param redisMode {@see
+     *                  {@link com.easy.redis.adapter.RedisAdapter#redisMode}
+     *                  {@link com.easy.redis.core.RedisEnvironment#redisConnectionFactoryIsInit}
+     *                  }
+     */
+    private void after(String redisMode) {
+        RedisEnvironment redisEnvironment = (RedisEnvironment) BeanRegisterUtil.beanFactory.getBean(RedisEnvironment.class.getName());
+        redisEnvironment.setRedisConnectionFactoryIsInit(Boolean.TRUE);
+        RedisAdapter redisAdapter = (RedisAdapter) BeanRegisterUtil.beanFactory.getBean(RedisAdapter.class.getName());
+        redisAdapter.setRedisMode(redisMode);
+    }
+
+    @Override
+    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+        BeanRegisterUtil.setBeanFactory(beanFactory);
+    }
 
 }

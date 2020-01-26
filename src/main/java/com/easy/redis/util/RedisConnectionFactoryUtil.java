@@ -1,8 +1,8 @@
 package com.easy.redis.util;
 
 import com.easy.redis.adapter.RedisAdapter;
+import com.easy.redis.boot.RedisBeanContext;
 import com.easy.redis.constants.RedisModeConstants;
-import com.easy.redis.core.RedisApplicationContext;
 import com.easy.redis.core.RedisEnvironment;
 import com.easy.redis.properties.RedisProperties;
 import lombok.extern.slf4j.Slf4j;
@@ -43,18 +43,13 @@ public class RedisConnectionFactoryUtil {
      */
     public static JedisConnectionFactory init(RedisProperties redisProperties) {
 
-        RedisEnvironment environment = RedisApplicationContext
-                .builder()
-                .build()
-                .getEnv();
+        RedisEnvironment environment = RedisBeanContext.getBean(RedisEnvironment.class);
 
         if (!environment.getRedisConnectionFactoryIsInit()) {
             return new JedisConnectionFactory();
         }
 
-        String redisMode = RedisApplicationContext
-                .builder()
-                .build()
+        String redisMode = RedisBeanContext
                 .getBean(RedisAdapter.class)
                 .getRedisMode();
 

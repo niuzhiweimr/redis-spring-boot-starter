@@ -34,7 +34,7 @@ public interface RedisCommands {
      * @param key redis#key
      * @param obj 值对象
      */
-    void set(String key, Object obj);
+    void setObj(String key, Object obj);
 
     /**
      * 添加
@@ -60,7 +60,7 @@ public interface RedisCommands {
      * @param obj     值队形
      * @param seconds 过期时间单位（S）
      */
-    void setex(String key, Object obj, int seconds);
+    void setexObj(String key, Object obj, int seconds);
 
     /**
      * 通过key获取值
@@ -103,7 +103,7 @@ public interface RedisCommands {
      * @param <T>   对象类型
      * @return
      */
-    <T> T get(String key, Class<T> clazz);
+    <T> T getObj(String key, Class<T> clazz);
 
     /**
      * 获取redis#key剩余过期时间
@@ -271,6 +271,15 @@ public interface RedisCommands {
      * @return
      */
     String rpop(String key);
+
+    /**
+     * redis阻塞队列
+     *
+     * @param key     redis#key
+     * @param seconds 过期时间单位（S）
+     * @return
+     */
+    List<String> blpop(String key, int seconds);
 
     /**
      * 设置key的过期时间
