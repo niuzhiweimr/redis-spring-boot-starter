@@ -1,8 +1,8 @@
  # 版本说明
-   
+           --注：最新版本master未经过测试请使用tag版本
     默认spring boot 版本为 2.1.5.RELEASE 下载完成项目后可更改为自己项目使用的spring boot版本  
-
-
+ 
+    
  # redis集成说明
                     
 1：启动类需要注解 { @EnableRedis } 开启redis（默认单点模式）  
